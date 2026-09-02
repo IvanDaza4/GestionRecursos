@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "./config";
+import { isSupabaseConfigured, isAuthDisabled } from "./config";
 import { demoLoginAvailable } from "@/lib/demo";
 
 /**
@@ -10,6 +10,12 @@ import { demoLoginAvailable } from "@/lib/demo";
  * cuenta ahí mismo y deja pasar a la ruta pedida (p. ej. /dashboard directo).
  */
 export async function updateSession(request: NextRequest) {
+  // DISABLE_AUTH=true: gate de login completamente apagado. Solo para
+  // desarrollo/preview — ver README, sección "Auth en stand-by".
+  if (isAuthDisabled) {
+    return NextResponse.next({ request });
+  }
+
   // Sin credenciales de Supabase configuradas, se deja pasar todo para
   // poder previsualizar el sistema de diseño sin un proyecto conectado.
   if (!isSupabaseConfigured) {

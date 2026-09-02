@@ -58,6 +58,44 @@ viven del lado del servidor y nunca llegan al navegador.
 > sistema, pero por eso mismo: solo en un entorno de prueba/preview, nunca en
 > una instancia con datos reales de la empresa.
 
+## Auth en stand-by (sin login)
+
+Para sacar el login del medio por completo mientras se resuelve algún
+problema con las cuentas de Supabase (o simplemente para no lidiar con
+credenciales al mostrar el sistema), hay un interruptor que apaga el gate de
+autenticación entero — ninguna ruta pide sesión, `/login` deja de aparecer.
+
+En `.env.local`:
+
+```
+DISABLE_AUTH=true
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
+```
+
+La `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API en el dashboard de
+Supabase) es la que hace que las páginas muestren datos reales: sin sesión
+de usuario, las políticas de RLS bloquean casi todas las lecturas, así que
+en este modo el servidor usa esa key para saltearlas. Sin ella, con
+`DISABLE_AUTH=true` solo, vas a ver el sistema navegable pero sin datos
+(o con errores en las páginas que consultan Supabase).
+
+**Qué funciona y qué no en este modo:**
+- ✅ Navegar todo el sistema, ver el dashboard, listados, ficha de recurso
+  (pasaporte), con datos reales — con la service role key puesta.
+- ⚠️ Crear una entrega o devolución (el wizard), un recurso nuevo, un
+  empleado, etc. sigue necesitando un usuario real logueado — la base de
+  datos exige saber *quién* entregó o recibió cada recurso (es la
+  trazabilidad que es la razón de ser de este sistema), así que esas
+  acciones van a fallar con "No autenticado" sin sesión. Para probarlas hay
+  que sacar `DISABLE_AUTH` y loguearse normal (o con el acceso demo de
+  arriba) con una cuenta que ya tenga perfil en `profiles`.
+
+> 🚨 **Esto deja el sistema completamente abierto a cualquiera con la URL,
+> con acceso total de lectura vía la service role key.** Es un interruptor
+> de emergencia para desarrollo/preview — sacalo (`DISABLE_AUTH=false` o
+> borrá la variable) antes de que esto vea datos reales de la empresa o
+> quede accesible públicamente.
+
 ## Desarrollo
 
 ```bash
