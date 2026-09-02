@@ -29,6 +29,31 @@ Sin estas variables, la app corre igual (`npm run dev`) mostrando el sistema
 de diseño y la navegación, con un aviso de "conectá un proyecto" en lugar de
 datos reales.
 
+## Acceso demo (opcional)
+
+Para no tener que crear una cuenta y loguearte a mano cada vez que querés
+mostrar el sistema, hay un botón "Ver el sistema (acceso demo)" en `/login`
+que entra con un click.
+
+1. Creá un usuario en Supabase (**Authentication → Users → Add user**),
+   tildando **Auto Confirm User**.
+2. Dale un perfil en `profiles` con ese mismo UID (ver sección de roles):
+   ```sql
+   insert into public.profiles (id, nombre, apellido, email, role)
+   values ('EL-UUID-DEL-USUARIO', 'Demo', 'Ingnala', 'demo@ingnala.com', 'rrhh');
+   ```
+3. En `.env.local`, agregá:
+   ```
+   DEMO_LOGIN_EMAIL=demo@ingnala.com
+   DEMO_LOGIN_PASSWORD=la-contraseña-que-le-pusiste
+   ```
+
+El botón solo aparece si estas dos variables están seteadas — si no las
+configurás, `/login` se ve exactamente igual que antes. Las credenciales
+viven del lado del servidor (nunca se exponen al navegador ni se guardan en
+el cliente), así que es seguro dejarlo así en un entorno de prueba, pero no
+lo actives en una instancia con datos reales de la empresa.
+
 ## Desarrollo
 
 ```bash

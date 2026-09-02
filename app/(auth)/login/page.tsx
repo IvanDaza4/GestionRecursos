@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
+import { demoLoginAvailable } from "@/lib/demo";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
 
@@ -15,7 +16,7 @@ export default async function LoginPage({
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-[36rem] rounded-full opacity-20 blur-3xl"
         style={{ background: "radial-gradient(closest-side, var(--accent), transparent)" }}
       />
-      <LoginForm next={next} />
+      <LoginForm next={next} demoEnabled={demoLoginAvailable()} />
     </div>
   );
 }
