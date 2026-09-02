@@ -31,9 +31,10 @@ datos reales.
 
 ## Acceso demo (opcional)
 
-Para no tener que crear una cuenta y loguearte a mano cada vez que querés
-mostrar el sistema, hay un botón "Ver el sistema (acceso demo)" en `/login`
-que entra con un click.
+Para mostrar el sistema sin loguearte a mano, se puede configurar una cuenta
+demo que entra **automáticamente**: al pedir cualquier ruta protegida
+(`/dashboard`, `/recursos`, etc.) sin sesión activa, en vez de redirigir a
+`/login` inicia sesión con esa cuenta y sigue directo a la página pedida.
 
 1. Creá un usuario en Supabase (**Authentication → Users → Add user**),
    tildando **Auto Confirm User**.
@@ -48,11 +49,14 @@ que entra con un click.
    DEMO_LOGIN_PASSWORD=la-contraseña-que-le-pusiste
    ```
 
-El botón solo aparece si estas dos variables están seteadas — si no las
-configurás, `/login` se ve exactamente igual que antes. Las credenciales
-viven del lado del servidor (nunca se exponen al navegador ni se guardan en
-el cliente), así que es seguro dejarlo así en un entorno de prueba, pero no
-lo actives en una instancia con datos reales de la empresa.
+Sin estas dos variables, el comportamiento es el de siempre (redirige a
+`/login` y pide credenciales reales). Las credenciales de la cuenta demo
+viven del lado del servidor y nunca llegan al navegador.
+
+> ⚠️ **Con estas variables seteadas, cualquiera con la URL entra directo con
+> la cuenta demo — sin login, sin excepción.** Es intencional para mostrar el
+> sistema, pero por eso mismo: solo en un entorno de prueba/preview, nunca en
+> una instancia con datos reales de la empresa.
 
 ## Desarrollo
 

@@ -1,27 +1,17 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState } from "react";
 import { motion } from "motion/react";
-import { Zap, AlertCircle, Eye } from "lucide-react";
-import { login, loginDemo, type LoginState } from "@/lib/actions/auth";
+import { Zap, AlertCircle } from "lucide-react";
+import { login, type LoginState } from "@/lib/actions/auth";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { springPanel } from "@/lib/animations";
 
 const initialState: LoginState = {};
 
-export function LoginForm({ next, demoEnabled }: { next: string; demoEnabled: boolean }) {
+export function LoginForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState(login, initialState);
-  const [demoPending, startDemoTransition] = useTransition();
-  const [demoError, setDemoError] = useState<string | null>(null);
-
-  function handleDemoLogin() {
-    setDemoError(null);
-    startDemoTransition(async () => {
-      const result = await loginDemo();
-      if (result?.error) setDemoError(result.error);
-    });
-  }
 
   return (
     <motion.div
@@ -64,39 +54,6 @@ export function LoginForm({ next, demoEnabled }: { next: string; demoEnabled: bo
           Iniciar sesión
         </Button>
       </form>
-
-      {demoEnabled && (
-        <>
-          <div className="flex items-center gap-3 my-5">
-            <div className="h-px flex-1 bg-white/8" />
-            <span className="text-[11px] text-ink-faint">o</span>
-            <div className="h-px flex-1 bg-white/8" />
-          </div>
-
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            loading={demoPending}
-            onClick={handleDemoLogin}
-            className="w-full"
-          >
-            <Eye className="size-4" />
-            Ver el sistema (acceso demo)
-          </Button>
-
-          {demoError && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="flex items-center gap-2 rounded-sm bg-danado/10 border border-danado/25 px-3 py-2 text-[12.5px] text-danado mt-3"
-            >
-              <AlertCircle className="size-3.5 shrink-0" />
-              {demoError}
-            </motion.div>
-          )}
-        </>
-      )}
     </motion.div>
   );
 }

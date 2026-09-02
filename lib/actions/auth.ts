@@ -32,33 +32,6 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   redirect(next);
 }
 
-export interface DemoLoginState {
-  error?: string;
-}
-
-/**
- * Login de un click con una cuenta fija, solo para mostrar el sistema.
- * Las credenciales viven en variables de entorno del servidor (nunca llegan
- * al navegador) y el botón ni siquiera se renderiza si no están seteadas.
- */
-export async function loginDemo(): Promise<DemoLoginState> {
-  const email = process.env.DEMO_LOGIN_EMAIL;
-  const password = process.env.DEMO_LOGIN_PASSWORD;
-
-  if (!email || !password) {
-    return { error: "El acceso demo no está configurado en este entorno." };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    return { error: "El acceso demo falló. Revisá la cuenta configurada en DEMO_LOGIN_EMAIL." };
-  }
-
-  redirect("/dashboard");
-}
-
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
