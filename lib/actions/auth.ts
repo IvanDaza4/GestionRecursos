@@ -20,6 +20,12 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    if (error.code === "email_not_confirmed" || /email.*not.*confirm/i.test(error.message)) {
+      return {
+        error:
+          "Tu email todavía no está confirmado. En Supabase, Authentication → Users → tu usuario → confirmá el email (o recreá el usuario tildando \"Auto Confirm User\").",
+      };
+    }
     return { error: "Credenciales inválidas. Verificá tu email y contraseña." };
   }
 
