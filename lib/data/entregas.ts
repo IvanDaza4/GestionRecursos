@@ -1,7 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import type { EstadoRecurso } from "@/lib/constants";
 import type { ComparacionEstado } from "@/lib/supabase/types";
-import type { EntregaActivaOption } from "@/components/wizard/types";
+
+export interface EntregaActivaOption {
+  entregaId: string;
+  recurso: {
+    id: string;
+    marca: string | null;
+    modelo: string | null;
+    codigo_interno: string | null;
+    numero_serie: string | null;
+    estado_actual: EstadoRecurso;
+    tipo_recurso: { nombre: string } | null;
+  };
+  empleado: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    legajo: string | null;
+    area: { id: string; nombre: string } | null;
+  };
+  estadoEntrega: EstadoRecurso;
+}
 
 interface RecursoResumen {
   id: string;

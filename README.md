@@ -1,100 +1,42 @@
-# Recursos Ingnala
+# Recursos
 
 Sistema de gestión y trazabilidad de recursos físicos (notebooks, teléfonos,
-indumentaria y otros dispositivos) para el sector de RRHH de Ingnala S.A.
+indumentaria y otros dispositivos) de la empresa: inventario, entregas,
+devoluciones, empleados, solicitudes y auditoría.
 
 Documenta el ciclo de vida completo de cada recurso — alta, entrega,
-devolución, reparación y baja — con evidencia fotográfica obligatoria y
-auditoría inmutable, para eliminar las disputas por daños no registrados.
+devolución y cambio de estado — con auditoría inmutable (`eventos_recurso`)
+generada automáticamente por triggers en la base, no por la aplicación.
 
 ## Stack
 
 - **Next.js 16** (App Router) + TypeScript + React 19
-- **Framer Motion** (`motion/react`) para todas las transiciones e interacciones
 - **Supabase** (Postgres + Storage + Auth) como backend
-- **Tailwind CSS v4** con un sistema de diseño propio (ver `docs/design-system.md`)
+- **Tailwind CSS v4** + CSS a medida (ver `app/globals.css`)
 
-## Poner en marcha un proyecto de Supabase
+## Proyecto Supabase
 
-1. Creá un proyecto en [supabase.com](https://supabase.com).
-2. Corré la migración inicial: `supabase/migrations/0001_initial_schema.sql`
-   (SQL Editor del dashboard, o `supabase db push` con la CLI).
-3. Opcional — datos de ejemplo: seguí las instrucciones en
-   `supabase/seed.sql` (requiere crear primero un usuario vía Auth).
-4. Copiá `.env.local.example` a `.env.local` y completá:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+La app ya está conectada a un proyecto Supabase real (`GestionRecursos`,
+`fpfgxfnxkkpfwvkfuxpg`) con el esquema completo aplicado — ver
+`supabase/migrations/0001_initial_schema.sql` para el detalle: tablas,
+triggers de auditoría automática y políticas de Row Level Security.
 
-Sin estas variables, la app corre igual (`npm run dev`) mostrando el sistema
-de diseño y la navegación, con un aviso de "conectá un proyecto" en lugar de
-datos reales.
+`.env.local` (no versionado) ya tiene `NEXT_PUBLIC_SUPABASE_URL` y
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` cargadas. Si necesitás recrearlo, copiá
+`.env.local.example` y completá esos dos valores desde el dashboard de
+Supabase (Project Settings → API).
 
-## Acceso demo (opcional)
+### Cuenta demo
 
-Para mostrar el sistema sin loguearte a mano, se puede configurar una cuenta
-demo que entra **automáticamente**: al pedir cualquier ruta protegida
-(`/dashboard`, `/recursos`, etc.) sin sesión activa, en vez de redirigir a
-`/login` inicia sesión con esa cuenta y sigue directo a la página pedida.
+Para entrar sin crear un usuario propio:
 
-1. Creá un usuario en Supabase (**Authentication → Users → Add user**),
-   tildando **Auto Confirm User**.
-2. Dale un perfil en `profiles` con ese mismo UID (ver sección de roles):
-   ```sql
-   insert into public.profiles (id, nombre, apellido, email, role)
-   values ('EL-UUID-DEL-USUARIO', 'Demo', 'Ingnala', 'demo@ingnala.com', 'rrhh');
-   ```
-3. En `.env.local`, agregá:
-   ```
-   DEMO_LOGIN_EMAIL=demo@ingnala.com
-   DEMO_LOGIN_PASSWORD=la-contraseña-que-le-pusiste
-   ```
+- **Email:** `demo@ingnala.com`
+- **Contraseña:** `Recursos2026!`
 
-Sin estas dos variables, el comportamiento es el de siempre (redirige a
-`/login` y pide credenciales reales). Las credenciales de la cuenta demo
-viven del lado del servidor y nunca llegan al navegador.
-
-> ⚠️ **Con estas variables seteadas, cualquiera con la URL entra directo con
-> la cuenta demo — sin login, sin excepción.** Es intencional para mostrar el
-> sistema, pero por eso mismo: solo en un entorno de prueba/preview, nunca en
-> una instancia con datos reales de la empresa.
-
-## Auth en stand-by (sin login)
-
-Para sacar el login del medio por completo mientras se resuelve algún
-problema con las cuentas de Supabase (o simplemente para no lidiar con
-credenciales al mostrar el sistema), hay un interruptor que apaga el gate de
-autenticación entero — ninguna ruta pide sesión, `/login` deja de aparecer.
-
-En `.env.local`:
-
-```
-DISABLE_AUTH=true
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
-```
-
-La `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API en el dashboard de
-Supabase) es la que hace que las páginas muestren datos reales: sin sesión
-de usuario, las políticas de RLS bloquean casi todas las lecturas, así que
-en este modo el servidor usa esa key para saltearlas. Sin ella, con
-`DISABLE_AUTH=true` solo, vas a ver el sistema navegable pero sin datos
-(o con errores en las páginas que consultan Supabase).
-
-**Qué funciona y qué no en este modo:**
-- ✅ Navegar todo el sistema, ver el dashboard, listados, ficha de recurso
-  (pasaporte), con datos reales — con la service role key puesta.
-- ⚠️ Crear una entrega o devolución (el wizard), un recurso nuevo, un
-  empleado, etc. sigue necesitando un usuario real logueado — la base de
-  datos exige saber *quién* entregó o recibió cada recurso (es la
-  trazabilidad que es la razón de ser de este sistema), así que esas
-  acciones van a fallar con "No autenticado" sin sesión. Para probarlas hay
-  que sacar `DISABLE_AUTH` y loguearse normal (o con el acceso demo de
-  arriba) con una cuenta que ya tenga perfil en `profiles`.
-
-> 🚨 **Esto deja el sistema completamente abierto a cualquiera con la URL,
-> con acceso total de lectura vía la service role key.** Es un interruptor
-> de emergencia para desarrollo/preview — sacalo (`DISABLE_AUTH=false` o
-> borrá la variable) antes de que esto vea datos reales de la empresa o
-> quede accesible públicamente.
+Tiene rol `rrhh`, que ya da acceso completo de lectura/escritura sobre
+recursos, entregas, devoluciones, empleados y solicitudes por diseño de las
+políticas RLS. También existe la cuenta real `implementaciones@ingnala.com.ar`
+(rol `rrhh`) creada en una sesión anterior — su contraseña no se tocó.
 
 ## Desarrollo
 
@@ -107,24 +49,39 @@ npm run lint
 
 ## Estructura
 
-- `app/(auth)/login` — login con Supabase Auth
-- `app/(app)/*` — módulos protegidos: dashboard, recursos, entregas,
-  devoluciones, empleados, solicitudes, reportes, administración
-- `components/wizard/*` — wizard de entrega/devolución (pasos + animaciones)
-- `components/resources/*` — ficha de recurso ("pasaporte del dispositivo")
-  con timeline animado
-- `components/dashboard/*` — indicadores y gráficos del dashboard de RRHH
-- `lib/data/*` — acceso a datos (Server Components)
-- `lib/actions/*` — Server Actions (mutaciones)
-- `lib/supabase/*` — clientes de Supabase (browser/server) y tipos
+- `app/login` — login con Supabase Auth
+- `app/(app)/*` — módulos protegidos: dashboard, recursos (inventario),
+  entregas, devoluciones, empleados, solicitudes, auditoría
+- `components/layout/app-shell.tsx` — sidebar + topbar + navegación
+- `components/<módulo>/*` — vista de lista + modal de alta por módulo
+- `lib/data/*` — lecturas contra Supabase (Server Components)
+- `lib/actions/*` — Server Actions (altas, entregas, devoluciones,
+  aprobación de solicitudes)
+- `lib/supabase/{client,server,proxy,types}.ts` — clientes de Supabase
+  (browser/server), sesión en el proxy (`proxy.ts` — Next 16 renombró
+  `middleware` a `proxy`), y tipos generados desde el esquema real
 - `supabase/migrations/0001_initial_schema.sql` — esquema completo con RLS
-- `docs/design-system.md` — tokens del sistema de diseño
 
 ## Roles
 
-- **RRHH** — gestión completa (recursos, entregas, devoluciones, solicitudes)
-- **Jefe de área** — consulta de su propio equipo
-- **Administrador** — gestión completa + usuarios y catálogos
+- **RRHH** / **Administrador** — gestión completa (recursos, entregas,
+  devoluciones, empleados, solicitudes)
+- **Jefe de área** — consulta acotada a su propia área (ver políticas RLS
+  en la migración)
 
 Los roles se gestionan en la tabla `profiles` y se aplican vía Row Level
-Security en Postgres (ver la migración).
+Security en Postgres — no hay lógica de permisos duplicada en el frontend.
+
+## Qué falta / próximos pasos
+
+Esta primera pasada deja operativo el núcleo real (auth + los 7 módulos
+con datos reales, sin mocks). Quedan afuera para iterar después:
+
+- Revisión de fotos de evidencia ya subidas (hoy solo se suben, no hay
+  galería de fotos históricas por entrega/devolución).
+- Búsqueda de empleado "en vivo" al registrar una devolución (hoy es un
+  `<select>` con todas las entregas activas; sirve para el volumen de un
+  MVP, no escala a cientos de empleados).
+- Reportes/exportables y gráficos de tendencia.
+- Gestión de áreas y catálogo de tipos de recurso desde la UI (hoy se
+  administran directo en Supabase).

@@ -1,16 +1,8 @@
-import type { Metadata } from "next";
-import { DevolucionesTable } from "@/components/entregas/devoluciones-table";
-import { SupabaseSetupNotice } from "@/components/ui/setup-notice";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { getDevoluciones } from "@/lib/data/entregas";
-
-export const metadata: Metadata = { title: "Devoluciones" };
+import { getDevoluciones, getEntregasActivas } from "@/lib/data/entregas";
+import { DevolucionesView } from "@/components/devoluciones/devoluciones-view";
 
 export default async function DevolucionesPage() {
-  if (!isSupabaseConfigured) {
-    return <SupabaseSetupNotice resource="devoluciones" />;
-  }
+  const [devoluciones, entregasActivas] = await Promise.all([getDevoluciones(), getEntregasActivas()]);
 
-  const devoluciones = await getDevoluciones();
-  return <DevolucionesTable devoluciones={devoluciones} />;
+  return <DevolucionesView devoluciones={devoluciones} entregasActivas={entregasActivas} />;
 }

@@ -1,53 +1,146 @@
-import type { Metadata } from "next";
-import { Boxes, PackageCheck, Wrench, ClipboardList } from "lucide-react";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { DisponibilidadChart } from "@/components/dashboard/disponibilidad-chart";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { AlertList } from "@/components/dashboard/alert-list";
-import { SupabaseSetupNotice } from "@/components/ui/setup-notice";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import Link from "next/link";
+import { AlertTriangle, ArrowUpRight, Clock3, Plus } from "lucide-react";
 import { getDashboardStats } from "@/lib/data/dashboard";
-
-export const metadata: Metadata = { title: "Dashboard" };
+import { TIPO_EVENTO_CONFIG } from "@/lib/constants";
+import { formatFechaHora } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  if (!isSupabaseConfigured) {
-    return <SupabaseSetupNotice resource="indicadores del dashboard" />;
-  }
-
   const stats = await getDashboardStats();
+  const pctDisponibles = stats.totalRecursos
+    ? Math.round((stats.disponibles / stats.totalRecursos) * 100)
+    : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Boxes />} label="Recursos activos" value={stats.totalRecursos} color="var(--accent)" index={0} />
-        <StatCard icon={<PackageCheck />} label="Entregas este mes" value={stats.entregasDelMes} color="var(--nuevo)" index={1} />
-        <StatCard icon={<Wrench />} label="En reparación" value={stats.enReparacion} color="var(--bueno)" index={2} />
-        <StatCard icon={<ClipboardList />} label="Solicitudes pendientes" value={stats.solicitudesPendientes} color="var(--regular)" index={3} />
+    <>
+      <div className="hero">
+        <div>
+          <p className="eyebrow">GESTIÓN DE RECURSOS</p>
+          <h1>
+            Pulso operativo <span>—</span>
+          </h1>
+          <p className="subtitle">El estado de tus recursos, en una sola mirada.</p>
+        </div>
+        <Link href="/recursos?nuevo=1" className="primary-button">
+          <Plus size={17} />
+          Dar de alta
+        </Link>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <DisponibilidadChart
-          total={stats.totalRecursos}
-          segmentos={[
-            { label: "Disponibles", value: stats.disponibles, color: "var(--nuevo)" },
-            { label: "Asignados", value: stats.asignados, color: "var(--accent)" },
-            { label: "En reparación", value: stats.enReparacion, color: "var(--bueno)" },
-          ]}
-        />
-        <AlertList
-          titulo="Estado deteriorado"
-          recursos={stats.recursosDeteriorados}
-          variant="estado"
-        />
-        <AlertList
-          titulo="Antigüedad elevada"
-          recursos={stats.recursosAntiguos}
-          variant="antiguedad"
-        />
+      <div className="signal-grid">
+        <article className="signal-card signal-main">
+          <div className="signal-head">
+            <span className="kicker">RECURSOS BAJO GESTIÓN</span>
+          </div>
+          <strong>{stats.totalRecursos}</strong>
+          <span>{pctDisponibles}% disponible</span>
+          <div className="pulse-line">
+            {Array.from({ length: 12 }, (_, i) => (
+              <b key={i} />
+            ))}
+          </div>
+          <div className="signal-foot">
+            <span>{stats.disponibles} disponibles</span>
+            <span>{stats.asignados} asignados</span>
+          </div>
+        </article>
+        <article className="signal-card">
+          <span className="signal-icon amber">
+            <Clock3 size={19} />
+          </span>
+          <strong>{stats.enReparacion}</strong>
+          <span>En reparación</span>
+          <Link href="/recursos">
+            Ver inventario <ArrowUpRight size={14} />
+          </Link>
+        </article>
+        <article className="signal-card">
+          <span className="signal-icon rose">
+            <AlertTriangle size={19} />
+          </span>
+          <strong>{stats.solicitudesPendientes}</strong>
+          <span>Solicitudes pendientes</span>
+          <Link href="/solicitudes">
+            Revisar <ArrowUpRight size={14} />
+          </Link>
+        </article>
       </div>
 
-      <ActivityFeed eventos={stats.eventosRecientes} />
-    </div>
+      <section className="panel movement-panel">
+        <div className="panel-title">
+          <div>
+            <p className="eyebrow">NUEVO MOVIMIENTO</p>
+            <h2>¿Qué necesitás registrar?</h2>
+          </div>
+          <span className="panel-count">3 opciones</span>
+        </div>
+        <div className="movement-choices">
+          <Link href="/entregas?nuevo=1" className="movement-choice indigo">
+            <span>
+              <ArrowUpRight size={22} />
+            </span>
+            <div>
+              <strong>Entregar recurso</strong>
+              <small>Asigná un activo a una persona</small>
+            </div>
+          </Link>
+          <Link href="/devoluciones?nuevo=1" className="movement-choice sage">
+            <span>
+              <ArrowUpRight size={22} style={{ transform: "rotate(90deg)" }} />
+            </span>
+            <div>
+              <strong>Recibir devolución</strong>
+              <small>Registrá estado y evidencia</small>
+            </div>
+          </Link>
+          <Link href="/recursos?nuevo=1" className="movement-choice sand">
+            <span>
+              <Plus size={22} />
+            </span>
+            <div>
+              <strong>Dar de alta recurso</strong>
+              <small>Sumá un nuevo activo al inventario</small>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="panel activity-panel">
+        <div className="panel-title">
+          <div>
+            <p className="eyebrow">RECIENTE</p>
+            <h2>Actividad del sistema</h2>
+          </div>
+          <Link href="/auditoria" className="text-button">
+            Ver auditoría <ArrowUpRight size={14} />
+          </Link>
+        </div>
+        <div className="update-list">
+          {stats.eventosRecientes.length === 0 && (
+            <p className="subtitle">Todavía no hay movimientos registrados.</p>
+          )}
+          {stats.eventosRecientes.map((evento) => {
+            const config = TIPO_EVENTO_CONFIG[evento.tipo_evento];
+            return (
+              <div className="update" key={evento.id}>
+                <span className={`update-dot ${config.tono === "blue" ? "" : config.tono}`} />
+                <div>
+                  <strong>{config.label}</strong>
+                  <p>
+                    {evento.recurso
+                      ? [evento.recurso.marca, evento.recurso.modelo].filter(Boolean).join(" ") ||
+                        evento.recurso.codigo_interno
+                      : evento.descripcion}
+                  </p>
+                  <small>
+                    {formatFechaHora(evento.fecha_evento)}
+                    {evento.actor ? ` · ${evento.actor.nombre} ${evento.actor.apellido}` : ""}
+                  </small>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </>
   );
 }

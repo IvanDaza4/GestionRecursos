@@ -1,16 +1,13 @@
-import type { Metadata } from "next";
-import { EntregasTable } from "@/components/entregas/entregas-table";
-import { SupabaseSetupNotice } from "@/components/ui/setup-notice";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getEntregas } from "@/lib/data/entregas";
-
-export const metadata: Metadata = { title: "Entregas" };
+import { getRecursosDisponibles, getEmpleados } from "@/lib/data/catalogos";
+import { EntregasView } from "@/components/entregas/entregas-view";
 
 export default async function EntregasPage() {
-  if (!isSupabaseConfigured) {
-    return <SupabaseSetupNotice resource="entregas" />;
-  }
+  const [entregas, recursosDisponibles, empleados] = await Promise.all([
+    getEntregas(),
+    getRecursosDisponibles(),
+    getEmpleados(),
+  ]);
 
-  const entregas = await getEntregas();
-  return <EntregasTable entregas={entregas} />;
+  return <EntregasView entregas={entregas} recursosDisponibles={recursosDisponibles} empleados={empleados} />;
 }

@@ -1,27 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured, isAuthDisabled } from "./config";
-import { demoLoginAvailable } from "@/lib/demo";
 
 /**
  * Refresca la sesión de Supabase en cada request y protege las rutas de
- * la app: sin sesión válida, redirige a /login — salvo que haya una cuenta
- * demo configurada (DEMO_LOGIN_EMAIL/PASSWORD), en cuyo caso loguea con esa
- * cuenta ahí mismo y deja pasar a la ruta pedida (p. ej. /dashboard directo).
+ * la app: sin sesión válida, redirige a /login. Con sesión, saca al usuario
+ * de /login hacia /dashboard.
  */
 export async function updateSession(request: NextRequest) {
-  // DISABLE_AUTH=true: gate de login completamente apagado. Solo para
-  // desarrollo/preview — ver README, sección "Auth en stand-by".
-  if (isAuthDisabled) {
-    return NextResponse.next({ request });
-  }
-
-  // Sin credenciales de Supabase configuradas, se deja pasar todo para
-  // poder previsualizar el sistema de diseño sin un proyecto conectado.
-  if (!isSupabaseConfigured) {
-    return NextResponse.next({ request });
-  }
-
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -47,27 +32,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
-  const isPublicAsset = request.nextUrl.pathname.startsWith("/_next");
+  const { pathname } = request.nextUrl;
+  const isLoginRoute = pathname.startsWith("/login");
 
-  if (!user && !isAuthRoute && !isPublicAsset) {
-    if (demoLoginAvailable()) {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: process.env.DEMO_LOGIN_EMAIL!,
-        password: process.env.DEMO_LOGIN_PASSWORD!,
-      });
-      // Al loguear con éxito, `setAll` ya dejó las cookies de sesión en
-      // `response`: seguimos hacia la ruta pedida en vez de redirigir.
-      if (!error) return response;
-    }
-
+  if (!user && !isLoginRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", request.nextUrl.pathname);
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && isLoginRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

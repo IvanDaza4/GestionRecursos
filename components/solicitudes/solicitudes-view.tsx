@@ -1,204 +1,160 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
-import { Plus, ClipboardList, Check, X } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/estado-badge";
-import { Label, Select, Textarea } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Plus, Check, X } from "lucide-react";
+import type { SolicitudConDetalle } from "@/lib/data/solicitudes";
+import type { EmpleadoConArea } from "@/lib/data/catalogos";
+import type { Tables } from "@/lib/supabase/types";
+import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
-import { staggerContainer, staggerItem } from "@/lib/animations";
-import { formatFecha } from "@/lib/utils";
-import { ESTADO_SOLICITUD_CONFIG, type EstadoSolicitud } from "@/lib/constants";
 import { createSolicitud, resolverSolicitud } from "@/lib/actions/solicitudes";
 
-interface Solicitud {
-  id: string;
-  descripcion: string | null;
-  estado: EstadoSolicitud;
-  fecha_solicitud: string;
-  empleado: { id: string; nombre: string; apellido: string } | null;
-  area: { id: string; nombre: string } | null;
-  tipo_recurso: { id: string; nombre: string } | null;
-}
-
-interface Empleado {
-  id: string;
-  nombre: string;
-  apellido: string;
-  area: { id: string; nombre: string } | null;
-}
-
-interface TipoRecurso {
-  id: string;
-  nombre: string;
-}
+type Area = Tables<"areas">;
+type TipoRecurso = Tables<"tipos_recurso">;
 
 export function SolicitudesView({
   solicitudes,
   empleados,
-  tiposRecurso,
+  areas,
+  tipos,
 }: {
-  solicitudes: Solicitud[];
-  empleados: Empleado[];
-  tiposRecurso: TipoRecurso[];
+  solicitudes: SolicitudConDetalle[];
+  empleados: EmpleadoConArea[];
+  areas: Area[];
+  tipos: TipoRecurso[];
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const router = useRouter();
-  const [resolvingId, startResolve] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
-  function resolver(id: string, estado: EstadoSolicitud) {
-    startResolve(async () => {
-      await resolverSolicitud(id, estado);
-      router.refresh();
+  const pendientes = solicitudes.filter((s) => s.estado === "pendiente");
+  const enCurso = solicitudes.filter((s) => s.estado !== "pendiente");
+
+  function resolver(id: string, estado: "aprobada" | "rechazada") {
+    startTransition(() => {
+      resolverSolicitud(id, estado);
     });
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-[13px] text-ink-muted">{solicitudes.length} solicitudes</p>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="size-4" /> Nueva solicitud
-        </Button>
+    <div className="module">
+      <div className="module-intro">
+        <div>
+          <p className="eyebrow">BANDEJA DE DECISIONES</p>
+          <h1>Solicitudes</h1>
+          <p className="subtitle">Priorizá lo que necesita una respuesta.</p>
+        </div>
+        <button className="primary-button" onClick={() => setModalOpen(true)}>
+          <Plus size={17} />
+          Nueva solicitud
+        </button>
       </div>
 
       {solicitudes.length === 0 ? (
-        <EmptyState icon={<ClipboardList />} title="Sin solicitudes" description="Todavía no se cargaron pedidos de recursos." />
+        <EmptyState title="No hay solicitudes todavía" description="Cuando alguien pida un recurso, va a aparecer acá." />
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-2.5">
-          {solicitudes.map((s) => {
-            const config = ESTADO_SOLICITUD_CONFIG[s.estado];
-            return (
-              <motion.div
-                key={s.id}
-                variants={staggerItem}
-                className="flex items-center gap-4 rounded-md border border-white/8 bg-card px-4 py-3.5"
-              >
-                {s.empleado && <Avatar nombre={s.empleado.nombre} apellido={s.empleado.apellido} size="sm" />}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-ink truncate">
-                    {s.tipo_recurso?.nombre ?? "Recurso"} · {s.empleado?.nombre} {s.empleado?.apellido}
-                  </p>
-                  <p className="text-[11.5px] text-ink-faint truncate">
-                    {s.descripcion ?? "Sin descripción"} · {formatFecha(s.fecha_solicitud)}
-                  </p>
+        <div className="request-board">
+          <div className="request-column urgent">
+            <div className="column-head">
+              <span>Requieren decisión</span>
+              <b>{pendientes.length}</b>
+            </div>
+            {pendientes.map((s) => (
+              <article className="request-card" key={s.id}>
+                <h3>{s.tipo_recurso?.nombre ?? "Recurso"}</h3>
+                <p>
+                  {s.empleado ? `${s.empleado.nombre} ${s.empleado.apellido}` : "—"}
+                  {s.area ? ` · ${s.area.nombre}` : ""}
+                </p>
+                {s.descripcion && <small>{s.descripcion}</small>}
+                <div>
+                  <button className="approve" disabled={isPending} onClick={() => resolver(s.id, "aprobada")}>
+                    <Check size={14} />
+                    Aprobar
+                  </button>
+                  <button className="reject" disabled={isPending} onClick={() => resolver(s.id, "rechazada")}>
+                    <X size={14} />
+                    Rechazar
+                  </button>
                 </div>
-                {s.area && <Badge className="shrink-0">{s.area.nombre}</Badge>}
-                <span
-                  className="shrink-0 inline-flex items-center h-6 px-2.5 rounded-xs text-[11px] font-medium border"
-                  style={{
-                    color: config.color,
-                    backgroundColor: `color-mix(in srgb, ${config.color} 14%, transparent)`,
-                    borderColor: `color-mix(in srgb, ${config.color} 30%, transparent)`,
-                  }}
-                >
-                  {config.label}
-                </span>
-                {s.estado === "pendiente" && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => resolver(s.id, "aprobada")}
-                      disabled={resolvingId}
-                      className="flex size-7 items-center justify-center rounded-sm bg-nuevo/12 text-nuevo hover:bg-nuevo/20 transition-colors"
-                      aria-label="Aprobar"
-                    >
-                      <Check className="size-3.5" />
-                    </button>
-                    <button
-                      onClick={() => resolver(s.id, "rechazada")}
-                      disabled={resolvingId}
-                      className="flex size-7 items-center justify-center rounded-sm bg-danado/12 text-danado hover:bg-danado/20 transition-colors"
-                      aria-label="Rechazar"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
+              </article>
+            ))}
+            {pendientes.length === 0 && <p className="subtitle">No hay solicitudes pendientes.</p>}
+          </div>
+          <div className="request-column">
+            <div className="column-head">
+              <span>Resueltas</span>
+              <b>{enCurso.length}</b>
+            </div>
+            {enCurso.map((s) => (
+              <article className="request-card compact-card" key={s.id}>
+                <h3>{s.tipo_recurso?.nombre ?? "Recurso"}</h3>
+                <Badge tono={s.estado === "rechazada" ? "rose" : s.estado === "entregada" ? "green" : "blue"}>
+                  {s.estado}
+                </Badge>
+              </article>
+            ))}
+          </div>
+        </div>
       )}
 
-      <NuevaSolicitudModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        empleados={empleados}
-        tiposRecurso={tiposRecurso}
-      />
+      {modalOpen && (
+        <Modal eyebrow="NUEVA SOLICITUD" title="Solicitud de recurso" onClose={() => setModalOpen(false)}>
+          <form action={createSolicitud} onSubmit={() => setTimeout(() => setModalOpen(false), 0)}>
+            <div className="modal-body">
+              <label>
+                Empleado
+                <select name="empleadoId" required defaultValue="">
+                  <option value="" disabled>
+                    Seleccioná un empleado
+                  </option>
+                  {empleados.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.nombre} {e.apellido}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="form-grid">
+                <label>
+                  Área
+                  <select name="areaId" defaultValue="">
+                    <option value="">Sin área</option>
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Tipo de recurso
+                  <select name="tipoRecursoId" defaultValue="">
+                    <option value="">Sin especificar</option>
+                    {tipos.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label>
+                Descripción
+                <textarea name="descripcion" placeholder="¿Qué necesita y por qué?" />
+              </label>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="outline-button" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="primary-button">
+                Registrar solicitud
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
-  );
-}
-
-function NuevaSolicitudModal({
-  open,
-  onClose,
-  empleados,
-  tiposRecurso,
-}: {
-  open: boolean;
-  onClose: () => void;
-  empleados: Empleado[];
-  tiposRecurso: TipoRecurso[];
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [empleadoId, setEmpleadoId] = useState("");
-  const empleadoSeleccionado = empleados.find((e) => e.id === empleadoId);
-
-  function handleSubmit(formData: FormData) {
-    formData.set("areaId", empleadoSeleccionado?.area?.id ?? "");
-    startTransition(async () => {
-      await createSolicitud(formData);
-      onClose();
-      router.refresh();
-    });
-  }
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <form action={handleSubmit} className="p-6 space-y-4">
-        <h2 className="text-base font-semibold text-ink">Nueva solicitud</h2>
-
-        <div>
-          <Label htmlFor="empleadoId">Empleado</Label>
-          <Select id="empleadoId" name="empleadoId" required value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)}>
-            <option value="" disabled>
-              Elegir empleado…
-            </option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre} {e.apellido}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="tipoRecursoId">Tipo de recurso</Label>
-          <Select id="tipoRecursoId" name="tipoRecursoId" defaultValue="">
-            <option value="">Sin especificar</option>
-            {tiposRecurso.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.nombre}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="descripcion">Motivo</Label>
-          <Textarea id="descripcion" name="descripcion" placeholder="Ej: notebook de reemplazo por rotura de pantalla" />
-        </div>
-
-        <Button type="submit" loading={pending} className="w-full">
-          Crear solicitud
-        </Button>
-      </form>
-    </Modal>
   );
 }

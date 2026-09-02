@@ -1,17 +1,13 @@
-import type { Metadata } from "next";
-import { EmpleadosView } from "@/components/empleados/empleados-view";
-import { SupabaseSetupNotice } from "@/components/ui/setup-notice";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getEmpleados, getAreas } from "@/lib/data/catalogos";
-
-export const metadata: Metadata = { title: "Empleados" };
+import { getEntregasActivas } from "@/lib/data/entregas";
+import { EmpleadosView } from "@/components/empleados/empleados-view";
 
 export default async function EmpleadosPage() {
-  if (!isSupabaseConfigured) {
-    return <SupabaseSetupNotice resource="empleados" />;
-  }
+  const [empleados, areas, entregasActivas] = await Promise.all([
+    getEmpleados(),
+    getAreas(),
+    getEntregasActivas(),
+  ]);
 
-  const [empleados, areas] = await Promise.all([getEmpleados(), getAreas()]);
-
-  return <EmpleadosView empleados={empleados} areas={areas} />;
+  return <EmpleadosView empleados={empleados} areas={areas} entregasActivas={entregasActivas} />;
 }

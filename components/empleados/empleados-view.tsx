@@ -1,154 +1,194 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import { Plus, Search, Users } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/estado-badge";
-import { Input, Label, Select } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from "react";
+import { Plus, ChevronRight, Search } from "lucide-react";
+import type { EmpleadoConArea } from "@/lib/data/catalogos";
+import type { EntregaActivaOption } from "@/lib/data/entregas";
+import type { Tables } from "@/lib/supabase/types";
+import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
-import { staggerContainer, staggerItem } from "@/lib/animations";
 import { createEmpleado } from "@/lib/actions/empleados";
 
-interface Empleado {
-  id: string;
-  nombre: string;
-  apellido: string;
-  legajo: string | null;
-  puesto: string | null;
-  area: { id: string; nombre: string } | null;
-}
+type Area = Tables<"areas">;
 
-interface Area {
-  id: string;
-  nombre: string;
-}
-
-export function EmpleadosView({ empleados, areas }: { empleados: Empleado[]; areas: Area[] }) {
+export function EmpleadosView({
+  empleados,
+  areas,
+  entregasActivas,
+}: {
+  empleados: EmpleadoConArea[];
+  areas: Area[];
+  entregasActivas: EntregaActivaOption[];
+}) {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [detalle, setDetalle] = useState<EmpleadoConArea | null>(null);
 
-  const filtrados = useMemo(
-    () =>
-      query.trim()
-        ? empleados.filter((e) =>
-            [e.nombre, e.apellido, e.legajo, e.area?.nombre]
-              .filter(Boolean)
-              .some((v) => v!.toLowerCase().includes(query.trim().toLowerCase())),
-          )
-        : empleados,
-    [empleados, query],
+  const recursosPorEmpleado = useMemo(() => {
+    const map = new Map<string, EntregaActivaOption[]>();
+    for (const op of entregasActivas) {
+      const list = map.get(op.empleado.id) ?? [];
+      list.push(op);
+      map.set(op.empleado.id, list);
+    }
+    return map;
+  }, [entregasActivas]);
+
+  const filtrados = empleados.filter((e) =>
+    `${e.nombre} ${e.apellido} ${e.area?.nombre ?? ""} ${e.puesto ?? ""}`.toLowerCase().includes(query.toLowerCase()),
   );
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-ink-faint" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar empleado…" className="pl-9" />
+    <div className="module">
+      <div className="module-intro">
+        <div>
+          <p className="eyebrow">DIRECTORIO OPERATIVO</p>
+          <h1>Empleados</h1>
+          <p className="subtitle">Personas, equipos y contexto en el mismo lugar.</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="size-4" /> Nuevo empleado
-        </Button>
+        <button className="primary-button" onClick={() => setModalOpen(true)}>
+          <Plus size={17} />
+          Nuevo empleado
+        </button>
+      </div>
+
+      <div className="module-stats">
+        <div>
+          <strong>{empleados.length}</strong>
+          <span>registros activos</span>
+        </div>
+        <div>
+          <strong>{new Set(empleados.map((e) => e.area?.id).filter(Boolean)).size}</strong>
+          <span>áreas</span>
+        </div>
+      </div>
+
+      <div className="module-tools">
+        <div className="search-field">
+          <Search size={17} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar persona, área o puesto..." />
+        </div>
       </div>
 
       {filtrados.length === 0 ? (
-        <EmptyState icon={<Users />} title="Sin empleados" description="No hay empleados que coincidan con la búsqueda." />
+        <EmptyState title="No hay empleados que coincidan" description="Probá con otra búsqueda o sumá uno nuevo." />
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {filtrados.map((e) => (
-              <motion.div key={e.id} variants={staggerItem} exit="exit" layout>
-                <Card>
-                  <div className="flex items-center gap-3">
-                    <Avatar nombre={e.nombre} apellido={e.apellido} />
-                    <div className="min-w-0">
-                      <p className="text-[14px] font-medium text-ink truncate">
-                        {e.nombre} {e.apellido}
-                      </p>
-                      <p className="text-[11px] text-ink-faint mono-data">{e.legajo ?? "s/legajo"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/6">
-                    {e.area && <Badge>{e.area.nombre}</Badge>}
-                    {e.puesto && <span className="text-[11px] text-ink-faint">{e.puesto}</span>}
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <div className="directory">
+          {filtrados.map((e) => {
+            const recursos = recursosPorEmpleado.get(e.id) ?? [];
+            return (
+              <article className="directory-row" key={e.id} onClick={() => setDetalle(e)}>
+                <div className="avatar large person-avatar">
+                  {e.nombre[0]}
+                  {e.apellido[0]}
+                </div>
+                <div>
+                  <strong>
+                    {e.nombre} {e.apellido}
+                  </strong>
+                  <span>{e.puesto ?? "—"}</span>
+                </div>
+                <Badge>{e.area?.nombre ?? "Sin área"}</Badge>
+                <div className="row-meta">
+                  <span>{e.email ?? "—"}</span>
+                  <span>{recursos.length} recurso(s) asignado(s)</span>
+                </div>
+                <ChevronRight size={17} />
+              </article>
+            );
+          })}
+        </div>
       )}
 
-      <NuevoEmpleadoModal open={modalOpen} onClose={() => setModalOpen(false)} areas={areas} />
-    </div>
-  );
-}
-
-function NuevoEmpleadoModal({ open, onClose, areas }: { open: boolean; onClose: () => void; areas: Area[] }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      await createEmpleado(formData);
-      onClose();
-      router.refresh();
-    });
-  }
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <form action={handleSubmit} className="p-6 space-y-4">
-        <h2 className="text-base font-semibold text-ink">Nuevo empleado</h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="nombre">Nombre</Label>
-            <Input id="nombre" name="nombre" required />
+      {detalle && (
+        <div className="detail-drawer">
+          <div className="drawer-head">
+            <div>
+              <p className="eyebrow">FICHA COMPLETA</p>
+              <h2>
+                {detalle.nombre} {detalle.apellido}
+              </h2>
+            </div>
+            <button className="icon-button" onClick={() => setDetalle(null)} aria-label="Cerrar">
+              <ChevronRight size={18} />
+            </button>
           </div>
-          <div>
-            <Label htmlFor="apellido">Apellido</Label>
-            <Input id="apellido" name="apellido" required />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="legajo">Legajo</Label>
-            <Input id="legajo" name="legajo" />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="areaId">Área</Label>
-          <Select id="areaId" name="areaId" defaultValue="">
-            <option value="">Sin asignar</option>
-            {areas.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nombre}
-              </option>
+          <div className="drawer-fields">
+            {[
+              ["Legajo", detalle.legajo],
+              ["Área", detalle.area?.nombre],
+              ["Puesto", detalle.puesto],
+              ["Email", detalle.email],
+              [
+                "Recursos asignados",
+                (recursosPorEmpleado.get(detalle.id) ?? [])
+                  .map((r) => [r.recurso.marca, r.recurso.modelo].filter(Boolean).join(" "))
+                  .join(", "),
+              ],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value || "—"}</strong>
+              </div>
             ))}
-          </Select>
+          </div>
         </div>
+      )}
 
-        <div>
-          <Label htmlFor="puesto">Puesto</Label>
-          <Input id="puesto" name="puesto" />
-        </div>
-
-        <Button type="submit" loading={pending} className="w-full">
-          Crear empleado
-        </Button>
-      </form>
-    </Modal>
+      {modalOpen && (
+        <Modal eyebrow="NUEVO EMPLEADO" title="Alta de empleado" onClose={() => setModalOpen(false)}>
+          <form action={createEmpleado} onSubmit={() => setTimeout(() => setModalOpen(false), 0)}>
+            <div className="modal-body">
+              <div className="form-grid">
+                <label>
+                  Nombre
+                  <input name="nombre" required placeholder="Nombre" />
+                </label>
+                <label>
+                  Apellido
+                  <input name="apellido" required placeholder="Apellido" />
+                </label>
+              </div>
+              <div className="form-grid">
+                <label>
+                  Legajo
+                  <input name="legajo" placeholder="Opcional" />
+                </label>
+                <label>
+                  Email
+                  <input name="email" type="email" placeholder="nombre@empresa.com" />
+                </label>
+              </div>
+              <div className="form-grid">
+                <label>
+                  Área
+                  <select name="areaId" defaultValue="">
+                    <option value="">Sin área</option>
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Puesto
+                  <input name="puesto" placeholder="Ej. Product Designer" />
+                </label>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="outline-button" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="primary-button">
+                Guardar empleado
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
   );
 }

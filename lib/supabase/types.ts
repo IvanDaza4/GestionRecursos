@@ -1,255 +1,765 @@
-// Tipos manuales alineados a supabase/migrations/0001_initial_schema.sql
-// Reemplazar por `supabase gen types typescript` una vez creado el proyecto real.
+// Generado con `generate_typescript_types` contra el proyecto Supabase real
+// (fpfgxfnxkkpfwvkfuxpg). Volver a generar si cambia el esquema.
 
-export type EstadoRecurso = "nuevo" | "muy_bueno" | "bueno" | "regular" | "danado";
-export type DisponibilidadRecurso = "disponible" | "asignado" | "en_reparacion" | "baja";
-export type EstadoSolicitud = "pendiente" | "aprobada" | "entregada" | "rechazada";
-export type TipoFoto = "frontal" | "dorso" | "detalle" | "otro";
-export type TipoEvento =
-  | "alta_recurso"
-  | "entrega"
-  | "devolucion"
-  | "reparacion"
-  | "cambio_estado"
-  | "baja_recurso"
-  | "solicitud_creada"
-  | "solicitud_resuelta";
-export type ComparacionEstado = "mejoro" | "igual" | "empeoro";
-export type UserRole = "rrhh" | "jefe_area" | "administrador";
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export interface Database {
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          nombre: string;
-          apellido: string;
-          email: string;
-          role: UserRole;
-          area_id: string | null;
-          activo: boolean;
-          creado_por: string | null;
-          fecha_creacion: string;
-          fecha_actualizacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["profiles"]["Row"]> & {
-          id: string;
-          nombre: string;
-          apellido: string;
-          email: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
-        Relationships: [];
-      };
       areas: {
         Row: {
-          id: string;
-          nombre: string;
-          descripcion: string | null;
-          responsable_id: string | null;
-          activo: boolean;
-          creado_por: string | null;
-          fecha_creacion: string;
-          fecha_actualizacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["areas"]["Row"]> & { nombre: string };
-        Update: Partial<Database["public"]["Tables"]["areas"]["Row"]>;
-        Relationships: [];
-      };
-      empleados: {
-        Row: {
-          id: string;
-          nombre: string;
-          apellido: string;
-          legajo: string | null;
-          email: string | null;
-          area_id: string | null;
-          puesto: string | null;
-          fecha_ingreso: string | null;
-          activo: boolean;
-          fecha_baja: string | null;
-          motivo_baja: string | null;
-          creado_por: string | null;
-          fecha_creacion: string;
-          fecha_actualizacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["empleados"]["Row"]> & {
-          nombre: string;
-          apellido: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["empleados"]["Row"]>;
-        Relationships: [];
-      };
-      tipos_recurso: {
-        Row: {
-          id: string;
-          nombre: string;
-          categoria: string;
-          requiere_serie: boolean;
-          requiere_imei: boolean;
-          activo: boolean;
-          fecha_creacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["tipos_recurso"]["Row"]> & { nombre: string };
-        Update: Partial<Database["public"]["Tables"]["tipos_recurso"]["Row"]>;
-        Relationships: [];
-      };
-      recursos: {
-        Row: {
-          id: string;
-          tipo_recurso_id: string;
-          codigo_interno: string | null;
-          marca: string | null;
-          modelo: string | null;
-          numero_serie: string | null;
-          imei: string | null;
-          descripcion: string | null;
-          estado_actual: EstadoRecurso;
-          disponibilidad: DisponibilidadRecurso;
-          fecha_alta: string;
-          activo: boolean;
-          fecha_baja: string | null;
-          motivo_baja: string | null;
-          creado_por: string | null;
-          fecha_creacion: string;
-          fecha_actualizacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["recursos"]["Row"]> & {
-          tipo_recurso_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["recursos"]["Row"]>;
-        Relationships: [];
-      };
-      entregas: {
-        Row: {
-          id: string;
-          recurso_id: string;
-          empleado_id: string;
-          area_id: string | null;
-          entregado_por: string;
-          fecha_entrega: string;
-          estado_entrega: EstadoRecurso;
-          observaciones: string | null;
-          aceptado: boolean;
-          fecha_aceptacion: string | null;
-          firma_url: string | null;
-          activo: boolean;
-          creado_por: string | null;
-          fecha_creacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["entregas"]["Row"]> & {
-          recurso_id: string;
-          empleado_id: string;
-          entregado_por: string;
-          estado_entrega: EstadoRecurso;
-        };
-        Update: Partial<Database["public"]["Tables"]["entregas"]["Row"]>;
-        Relationships: [];
-      };
-      entrega_fotos: {
-        Row: {
-          id: string;
-          entrega_id: string;
-          tipo_foto: TipoFoto;
-          url: string;
-          orden: number;
-          fecha_creacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["entrega_fotos"]["Row"]> & {
-          entrega_id: string;
-          tipo_foto: TipoFoto;
-          url: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["entrega_fotos"]["Row"]>;
-        Relationships: [];
-      };
-      devoluciones: {
-        Row: {
-          id: string;
-          entrega_id: string | null;
-          recurso_id: string;
-          empleado_id: string;
-          recibido_por: string;
-          fecha_devolucion: string;
-          estado_devolucion: EstadoRecurso;
-          comparacion_resultado: ComparacionEstado | null;
-          observaciones: string | null;
-          activo: boolean;
-          creado_por: string | null;
-          fecha_creacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["devoluciones"]["Row"]> & {
-          recurso_id: string;
-          empleado_id: string;
-          recibido_por: string;
-          estado_devolucion: EstadoRecurso;
-        };
-        Update: Partial<Database["public"]["Tables"]["devoluciones"]["Row"]>;
-        Relationships: [];
-      };
+          activo: boolean
+          creado_por: string | null
+          descripcion: string | null
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          nombre: string
+          responsable_id: string | null
+        }
+        Insert: {
+          activo?: boolean
+          creado_por?: string | null
+          descripcion?: string | null
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          nombre: string
+          responsable_id?: string | null
+        }
+        Update: {
+          activo?: boolean
+          creado_por?: string | null
+          descripcion?: string | null
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          nombre?: string
+          responsable_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_areas_creado_por"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_areas_responsable"
+            columns: ["responsable_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devolucion_fotos: {
         Row: {
-          id: string;
-          devolucion_id: string;
-          tipo_foto: TipoFoto;
-          url: string;
-          orden: number;
-          fecha_creacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["devolucion_fotos"]["Row"]> & {
-          devolucion_id: string;
-          tipo_foto: TipoFoto;
-          url: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["devolucion_fotos"]["Row"]>;
-        Relationships: [];
-      };
-      solicitudes: {
+          devolucion_id: string
+          fecha_creacion: string
+          id: string
+          orden: number
+          tipo_foto: Database["public"]["Enums"]["tipo_foto"]
+          url: string
+        }
+        Insert: {
+          devolucion_id: string
+          fecha_creacion?: string
+          id?: string
+          orden?: number
+          tipo_foto: Database["public"]["Enums"]["tipo_foto"]
+          url: string
+        }
+        Update: {
+          devolucion_id?: string
+          fecha_creacion?: string
+          id?: string
+          orden?: number
+          tipo_foto?: Database["public"]["Enums"]["tipo_foto"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devolucion_fotos_devolucion_id_fkey"
+            columns: ["devolucion_id"]
+            isOneToOne: false
+            referencedRelation: "devoluciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devoluciones: {
         Row: {
-          id: string;
-          empleado_id: string;
-          area_id: string | null;
-          tipo_recurso_id: string | null;
-          descripcion: string | null;
-          estado: EstadoSolicitud;
-          solicitado_por: string | null;
-          aprobado_por: string | null;
-          entrega_id: string | null;
-          fecha_solicitud: string;
-          fecha_resolucion: string | null;
-          observaciones: string | null;
-          creado_por: string | null;
-          fecha_creacion: string;
-          fecha_actualizacion: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["solicitudes"]["Row"]> & {
-          empleado_id: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["solicitudes"]["Row"]>;
-        Relationships: [];
-      };
+          activo: boolean
+          comparacion_resultado:
+            | Database["public"]["Enums"]["comparacion_estado"]
+            | null
+          creado_por: string | null
+          empleado_id: string
+          entrega_id: string | null
+          estado_devolucion: Database["public"]["Enums"]["estado_recurso"]
+          fecha_creacion: string
+          fecha_devolucion: string
+          id: string
+          observaciones: string | null
+          recibido_por: string
+          recurso_id: string
+        }
+        Insert: {
+          activo?: boolean
+          comparacion_resultado?:
+            | Database["public"]["Enums"]["comparacion_estado"]
+            | null
+          creado_por?: string | null
+          empleado_id: string
+          entrega_id?: string | null
+          estado_devolucion: Database["public"]["Enums"]["estado_recurso"]
+          fecha_creacion?: string
+          fecha_devolucion?: string
+          id?: string
+          observaciones?: string | null
+          recibido_por: string
+          recurso_id: string
+        }
+        Update: {
+          activo?: boolean
+          comparacion_resultado?:
+            | Database["public"]["Enums"]["comparacion_estado"]
+            | null
+          creado_por?: string | null
+          empleado_id?: string
+          entrega_id?: string | null
+          estado_devolucion?: Database["public"]["Enums"]["estado_recurso"]
+          fecha_creacion?: string
+          fecha_devolucion?: string
+          id?: string
+          observaciones?: string | null
+          recibido_por?: string
+          recurso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devoluciones_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devoluciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devoluciones_entrega_id_fkey"
+            columns: ["entrega_id"]
+            isOneToOne: false
+            referencedRelation: "entregas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devoluciones_recibido_por_fkey"
+            columns: ["recibido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devoluciones_recurso_id_fkey"
+            columns: ["recurso_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empleados: {
+        Row: {
+          activo: boolean
+          apellido: string
+          area_id: string | null
+          creado_por: string | null
+          email: string | null
+          fecha_actualizacion: string
+          fecha_baja: string | null
+          fecha_creacion: string
+          fecha_ingreso: string | null
+          id: string
+          legajo: string | null
+          motivo_baja: string | null
+          nombre: string
+          puesto: string | null
+        }
+        Insert: {
+          activo?: boolean
+          apellido: string
+          area_id?: string | null
+          creado_por?: string | null
+          email?: string | null
+          fecha_actualizacion?: string
+          fecha_baja?: string | null
+          fecha_creacion?: string
+          fecha_ingreso?: string | null
+          id?: string
+          legajo?: string | null
+          motivo_baja?: string | null
+          nombre: string
+          puesto?: string | null
+        }
+        Update: {
+          activo?: boolean
+          apellido?: string
+          area_id?: string | null
+          creado_por?: string | null
+          email?: string | null
+          fecha_actualizacion?: string
+          fecha_baja?: string | null
+          fecha_creacion?: string
+          fecha_ingreso?: string | null
+          id?: string
+          legajo?: string | null
+          motivo_baja?: string | null
+          nombre?: string
+          puesto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entrega_fotos: {
+        Row: {
+          entrega_id: string
+          fecha_creacion: string
+          id: string
+          orden: number
+          tipo_foto: Database["public"]["Enums"]["tipo_foto"]
+          url: string
+        }
+        Insert: {
+          entrega_id: string
+          fecha_creacion?: string
+          id?: string
+          orden?: number
+          tipo_foto: Database["public"]["Enums"]["tipo_foto"]
+          url: string
+        }
+        Update: {
+          entrega_id?: string
+          fecha_creacion?: string
+          id?: string
+          orden?: number
+          tipo_foto?: Database["public"]["Enums"]["tipo_foto"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entrega_fotos_entrega_id_fkey"
+            columns: ["entrega_id"]
+            isOneToOne: false
+            referencedRelation: "entregas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entregas: {
+        Row: {
+          aceptado: boolean
+          activo: boolean
+          area_id: string | null
+          creado_por: string | null
+          empleado_id: string
+          entregado_por: string
+          estado_entrega: Database["public"]["Enums"]["estado_recurso"]
+          fecha_aceptacion: string | null
+          fecha_creacion: string
+          fecha_entrega: string
+          firma_url: string | null
+          id: string
+          observaciones: string | null
+          recurso_id: string
+        }
+        Insert: {
+          aceptado?: boolean
+          activo?: boolean
+          area_id?: string | null
+          creado_por?: string | null
+          empleado_id: string
+          entregado_por: string
+          estado_entrega: Database["public"]["Enums"]["estado_recurso"]
+          fecha_aceptacion?: string | null
+          fecha_creacion?: string
+          fecha_entrega?: string
+          firma_url?: string | null
+          id?: string
+          observaciones?: string | null
+          recurso_id: string
+        }
+        Update: {
+          aceptado?: boolean
+          activo?: boolean
+          area_id?: string | null
+          creado_por?: string | null
+          empleado_id?: string
+          entregado_por?: string
+          estado_entrega?: Database["public"]["Enums"]["estado_recurso"]
+          fecha_aceptacion?: string | null
+          fecha_creacion?: string
+          fecha_entrega?: string
+          firma_url?: string | null
+          id?: string
+          observaciones?: string | null
+          recurso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entregas_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_entregado_por_fkey"
+            columns: ["entregado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_recurso_id_fkey"
+            columns: ["recurso_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_recurso: {
         Row: {
-          id: string;
-          recurso_id: string;
-          tipo_evento: TipoEvento;
-          referencia_tabla: string | null;
-          referencia_id: string | null;
-          descripcion: string | null;
-          actor_id: string | null;
-          metadata: Record<string, unknown> | null;
-          fecha_evento: string;
-        };
-        Insert: Partial<Database["public"]["Tables"]["eventos_recurso"]["Row"]> & {
-          recurso_id: string;
-          tipo_evento: TipoEvento;
-        };
-        Update: Partial<Database["public"]["Tables"]["eventos_recurso"]["Row"]>;
-        Relationships: [];
-      };
-    };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-  };
+          actor_id: string | null
+          descripcion: string | null
+          fecha_evento: string
+          id: string
+          metadata: Json | null
+          recurso_id: string
+          referencia_id: string | null
+          referencia_tabla: string | null
+          tipo_evento: Database["public"]["Enums"]["tipo_evento"]
+        }
+        Insert: {
+          actor_id?: string | null
+          descripcion?: string | null
+          fecha_evento?: string
+          id?: string
+          metadata?: Json | null
+          recurso_id: string
+          referencia_id?: string | null
+          referencia_tabla?: string | null
+          tipo_evento: Database["public"]["Enums"]["tipo_evento"]
+        }
+        Update: {
+          actor_id?: string | null
+          descripcion?: string | null
+          fecha_evento?: string
+          id?: string
+          metadata?: Json | null
+          recurso_id?: string
+          referencia_id?: string | null
+          referencia_tabla?: string | null
+          tipo_evento?: Database["public"]["Enums"]["tipo_evento"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_recurso_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eventos_recurso_recurso_id_fkey"
+            columns: ["recurso_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          activo: boolean
+          apellido: string
+          area_id: string | null
+          creado_por: string | null
+          email: string
+          fecha_actualizacion: string
+          fecha_creacion: string
+          id: string
+          nombre: string
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          activo?: boolean
+          apellido: string
+          area_id?: string | null
+          creado_por?: string | null
+          email: string
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id: string
+          nombre: string
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          activo?: boolean
+          apellido?: string
+          area_id?: string | null
+          creado_por?: string | null
+          email?: string
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          id?: string
+          nombre?: string
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recursos: {
+        Row: {
+          activo: boolean
+          codigo_interno: string | null
+          creado_por: string | null
+          descripcion: string | null
+          disponibilidad: Database["public"]["Enums"]["disponibilidad_recurso"]
+          estado_actual: Database["public"]["Enums"]["estado_recurso"]
+          fecha_actualizacion: string
+          fecha_alta: string
+          fecha_baja: string | null
+          fecha_creacion: string
+          id: string
+          imei: string | null
+          marca: string | null
+          modelo: string | null
+          motivo_baja: string | null
+          numero_serie: string | null
+          tipo_recurso_id: string
+        }
+        Insert: {
+          activo?: boolean
+          codigo_interno?: string | null
+          creado_por?: string | null
+          descripcion?: string | null
+          disponibilidad?: Database["public"]["Enums"]["disponibilidad_recurso"]
+          estado_actual?: Database["public"]["Enums"]["estado_recurso"]
+          fecha_actualizacion?: string
+          fecha_alta?: string
+          fecha_baja?: string | null
+          fecha_creacion?: string
+          id?: string
+          imei?: string | null
+          marca?: string | null
+          modelo?: string | null
+          motivo_baja?: string | null
+          numero_serie?: string | null
+          tipo_recurso_id: string
+        }
+        Update: {
+          activo?: boolean
+          codigo_interno?: string | null
+          creado_por?: string | null
+          descripcion?: string | null
+          disponibilidad?: Database["public"]["Enums"]["disponibilidad_recurso"]
+          estado_actual?: Database["public"]["Enums"]["estado_recurso"]
+          fecha_actualizacion?: string
+          fecha_alta?: string
+          fecha_baja?: string | null
+          fecha_creacion?: string
+          id?: string
+          imei?: string | null
+          marca?: string | null
+          modelo?: string | null
+          motivo_baja?: string | null
+          numero_serie?: string | null
+          tipo_recurso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recursos_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recursos_tipo_recurso_id_fkey"
+            columns: ["tipo_recurso_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_recurso"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solicitudes: {
+        Row: {
+          aprobado_por: string | null
+          area_id: string | null
+          creado_por: string | null
+          descripcion: string | null
+          empleado_id: string
+          entrega_id: string | null
+          estado: Database["public"]["Enums"]["estado_solicitud"]
+          fecha_actualizacion: string
+          fecha_creacion: string
+          fecha_resolucion: string | null
+          fecha_solicitud: string
+          id: string
+          observaciones: string | null
+          solicitado_por: string | null
+          tipo_recurso_id: string | null
+        }
+        Insert: {
+          aprobado_por?: string | null
+          area_id?: string | null
+          creado_por?: string | null
+          descripcion?: string | null
+          empleado_id: string
+          entrega_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_solicitud"]
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          fecha_resolucion?: string | null
+          fecha_solicitud?: string
+          id?: string
+          observaciones?: string | null
+          solicitado_por?: string | null
+          tipo_recurso_id?: string | null
+        }
+        Update: {
+          aprobado_por?: string | null
+          area_id?: string | null
+          creado_por?: string | null
+          descripcion?: string | null
+          empleado_id?: string
+          entrega_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_solicitud"]
+          fecha_actualizacion?: string
+          fecha_creacion?: string
+          fecha_resolucion?: string | null
+          fecha_solicitud?: string
+          id?: string
+          observaciones?: string | null
+          solicitado_por?: string | null
+          tipo_recurso_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitudes_aprobado_por_fkey"
+            columns: ["aprobado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_entrega_id_fkey"
+            columns: ["entrega_id"]
+            isOneToOne: false
+            referencedRelation: "entregas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_tipo_recurso_id_fkey"
+            columns: ["tipo_recurso_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_recurso"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tipos_recurso: {
+        Row: {
+          activo: boolean
+          categoria: string
+          fecha_creacion: string
+          id: string
+          nombre: string
+          requiere_imei: boolean
+          requiere_serie: boolean
+        }
+        Insert: {
+          activo?: boolean
+          categoria?: string
+          fecha_creacion?: string
+          id?: string
+          nombre: string
+          requiere_imei?: boolean
+          requiere_serie?: boolean
+        }
+        Update: {
+          activo?: boolean
+          categoria?: string
+          fecha_creacion?: string
+          id?: string
+          nombre?: string
+          requiere_imei?: boolean
+          requiere_serie?: boolean
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      current_area: { Args: never; Returns: string }
+      current_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_rrhh_or_admin: { Args: never; Returns: boolean }
+    }
+    Enums: {
+      comparacion_estado: "mejoro" | "igual" | "empeoro"
+      disponibilidad_recurso:
+        | "disponible"
+        | "asignado"
+        | "en_reparacion"
+        | "baja"
+      estado_recurso: "nuevo" | "muy_bueno" | "bueno" | "regular" | "danado"
+      estado_solicitud: "pendiente" | "aprobada" | "entregada" | "rechazada"
+      tipo_evento:
+        | "alta_recurso"
+        | "entrega"
+        | "devolucion"
+        | "reparacion"
+        | "cambio_estado"
+        | "baja_recurso"
+        | "solicitud_creada"
+        | "solicitud_resuelta"
+      tipo_foto: "frontal" | "dorso" | "detalle" | "otro"
+      user_role: "rrhh" | "jefe_area" | "administrador"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+export type EstadoRecurso = Database["public"]["Enums"]["estado_recurso"]
+export type DisponibilidadRecurso = Database["public"]["Enums"]["disponibilidad_recurso"]
+export type EstadoSolicitud = Database["public"]["Enums"]["estado_solicitud"]
+export type TipoFoto = Database["public"]["Enums"]["tipo_foto"]
+export type TipoEvento = Database["public"]["Enums"]["tipo_evento"]
+export type ComparacionEstado = Database["public"]["Enums"]["comparacion_estado"]
+export type UserRole = Database["public"]["Enums"]["user_role"]
+
+type DefaultSchema = Database["public"]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"]),
+> = (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  Row: infer R
+}
+  ? R
+  : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"],
+> = DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  Insert: infer I
+}
+  ? I
+  : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"],
+> = DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  Update: infer U
+}
+  ? U
+  : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"],
+> = DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
