@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Ingnala S.A. — Sistema de Gestión de Recursos
+   Tokens del sistema de diseño (ver docs/design-system.md)
+   ============================================================================ */
+
+:root {
+  /* Superficies */
+  --base: #0a0b0d;
+  --surface: #111318;
+  --card: #15171c;
+  --elevated: #1b1e24;
+  --surface-hover: #1d2028;
+
+  /* Acento cian eléctrico */
+  --accent-tint: #e6fdff;
+  --accent-soft: #67e8f9;
+  --accent: #22d3ee;
+  --accent-bright: #00e5ff;
+  --accent-dim: #0ba5c7;
+
+  /* Estados semánticos de condición de recurso */
+  --nuevo: #2dd4bf;
+  --muybueno: #5eead4;
+  --bueno: #fbbf24;
+  --regular: #f0973d;
+  --danado: #fb6f6f;
+
+  /* Texto */
+  --ink: #f5f7fa;
+  --ink-muted: #9aa3af;
+  --ink-faint: #6b7280;
+  --ink-inverse: #04191c;
+
+  /* Elevación (sombra oscura difusa, no shadow-md gris genérico) */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --elevation-2: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --elevation-3: 0 12px 40px rgba(0, 0, 0, 0.6);
+
+  /* Glow de acento — uso puntual en elementos activos/focales */
+  --glow-accent: 0 0 0 1px rgba(34, 211, 238, 0.25),
+    0 0 24px -4px rgba(0, 229, 255, 0.35);
+  --glow-danado: 0 0 0 1px rgba(251, 111, 111, 0.3),
+    0 0 20px -4px rgba(251, 111, 111, 0.35);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-base: var(--base);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-elevated: var(--elevated);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-dim: var(--accent-dim);
+
+  --color-nuevo: var(--nuevo);
+  --color-muybueno: var(--muybueno);
+  --color-bueno: var(--bueno);
+  --color-regular: var(--regular);
+  --color-danado: var(--danado);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-inverse: var(--ink-inverse);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+* {
+  border-color: rgb(255 255 255 / 8%);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--base);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(34 211 238 / 25%);
+  color: var(--ink);
+}
+
+/* Scrollbar discreto, coherente con el tema oscuro */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  border: 2px solid var(--base);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 18%);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@layer utilities {
+  .mono-data {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  .elevation-1 {
+    box-shadow: var(--elevation-1);
+  }
+  .elevation-2 {
+    box-shadow: var(--elevation-2);
+  }
+  .elevation-3 {
+    box-shadow: var(--elevation-3);
+  }
+
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+  .glow-danado {
+    box-shadow: var(--glow-danado);
+  }
+
+  .surface-panel {
+    background: var(--surface);
+    border: 1px solid rgb(255 255 255 / 8%);
+  }
+  .surface-card {
+    background: var(--card);
+    border: 1px solid rgb(255 255 255 / 8%);
+  }
+}
